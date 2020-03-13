@@ -1,11 +1,11 @@
 ---
-- name: Playbook to execute EP2 script and to fetch the output file
+- name: Playbook to copy, extract, execute EP2 script
   become: true
   become_method: sudo
-  hosts: Root
-  remote_user: vengatr1
+  hosts: servers
+  remote_user: pandiasadmin
   tasks:
-    - name: Copy EP2script zip file to tmp location with owner and permissions
+    - name: Copy EP2script zip file to /var/tmp location with owner and permissions
       copy:
         src: /home/vengatr1/ansible/files/EP2441.20180813-020620-597.gold.tar.gz
         dest: /tmp
