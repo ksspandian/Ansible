@@ -1,0 +1,19 @@
+---
+- name: To remediate Health check violations
+  hosts: servers
+  gather_facts: false
+  remote_user: pandiasadmin
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: To add umask to /etc/skel/.bashrc & /etc/skel/.bash_profile
+    lineinfile:
+      path: "{{ item }}"
+      line: "umask 077"
+      backup: yes
+    with_items:
+    - "/etc/skel/.bashrc"
+    - "/etc/skel/.bash_profile"
+  - name: To move folder CH547782 under /etc/pam.d to /var/tmp
+    shell: "cd /etc/pam.d && mv CH547782 /var/tmp"
+ 
