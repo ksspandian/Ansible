@@ -1,0 +1,25 @@
+---
+- name: To upgrade vmware tools
+  become: true
+  become_method: sudo
+  hosts: servers
+  remote_user: pandiasadmin
+  gather_facts: false
+  tasks:
+    - name: Copy vmtools installation package file with owner and permissions under /tmp
+      copy:
+        #src: /home/kpandian/ansible/files/VMwareTools-10.2.5-8068406.tar.gz
+        src: /home/kpandian/ansible/files/VMwareTools-10.3.5-10430147.tar.gz
+        dest: /tmp
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Extract tar.gz file into /tmp
+      unarchive:
+        #src: /tmp/VMwareTools-10.2.5-8068406.tar.gz
+        src: /tmp/VMwareTools-10.3.5-10430147.tar.gz
+        dest: /tmp
+        remote_src: yes
+    - name: Launch VMwareTools installation
+      command: /tmp/vmware-tools-distrib/vmware-install.pl --default
+      ignore_errors: True

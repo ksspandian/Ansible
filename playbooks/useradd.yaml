@@ -1,0 +1,26 @@
+---
+- name: Playbook to create new user cmfsme with passwords and provide sudo access
+  hosts: servers
+  remote_user: root
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  tasks:
+  - name: Creating user cmfsme
+    user:
+      name: "{{ item.user }}"
+      state: present
+      shell: /bin/bash
+      password: "{{ item.password }}"
+    with_items:
+    - user: "cmfsme" 
+      password: '$6$6rdZM5kKfaxP62i5$qOLOJKwH0p4qd0.d3KPlgciBDIF1j0w9SnB0MQe21bYyYg/E.Wy/9DIwXUt8u9dcpHDQ1xW0tTL961KP.jybj0'
+  - name: To provide sudo access for cmfsme
+    lineinfile:
+      path: /etc/sudoers
+      insertbefore: "#  Lockdown"
+      line: "{{ item }}"
+      state: present
+      backup: yes
+    with_items:
+    - "cmfsme ALL=(ALL) NOPASSWD: ALL"

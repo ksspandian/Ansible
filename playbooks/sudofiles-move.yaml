@@ -1,0 +1,21 @@
+---
+- name: Playbook to move sudo templates under /tmp to /etc/sudoers.d in remote servers 
+  become: true
+  become_method: sudo
+  hosts: servers
+  gather_facts: false
+  remote_user: pandiasadmin
+  tasks:
+    - name: move sudo templates under /tmp to /etc/sudoers.d
+      copy:
+        src: /tmp/{{ item }}
+        dest: /etc/sudoers.d/
+        owner: root
+        group: root
+        mode: '0440'
+        remote_src: yes
+      with_items:
+        - 114_TIVCLIENT_GLB 
+        - 115_TIVOLI_INFRA_GLB 
+        - 117_NETCOOL_GLB 
+        - 237_DB2_NA  

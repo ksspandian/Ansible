@@ -1,0 +1,23 @@
+---
+- name: Playbook to execute gapcheck script and to fetch the output file 
+  #become: true
+  #become_method: sudo
+  hosts: servers
+  #remote_user: pandiasadmin
+  tasks:
+    - name: Find the Linux,SSH,SUDO gap check files under /tmp and register the output
+      find:
+        paths: /tmp
+        patterns: '*isec*.csv'
+      register: findfiles
+#    - name: From registered output, pull only the filename
+#      set_fact:
+#        all_files:
+#          - "{{ findfiles.files | map(attribute='path') | list }}"
+    - name: Fetch files from remote server
+      fetch:
+        src: "{{ item }}"
+        dest: /home/kpandian/ansible/gapoutput/
+        flat: yes
+      with_items:
+        - "{{ findfiles.files | map(attribute='path') | list }}"

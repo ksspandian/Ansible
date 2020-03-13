@@ -1,0 +1,12 @@
+---
+- name: Restart besclient service
+  hosts: servers
+  gather_facts: false
+  remote_user: pandiasadmin
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Restart besclient service
+      service:
+        name: besclient
+        state: restarted

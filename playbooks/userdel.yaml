@@ -1,0 +1,15 @@
+---
+- name: remove the user
+  hosts: servers
+  remote_user: dodlasadmin
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  tasks:
+  - name: remove user cmfsme
+    user:
+      name: "{{ item.user }}"
+      state: absent
+      remove: yes
+    with_items:
+    - user: "cmfsme"

@@ -1,0 +1,27 @@
+---
+- name: Playbook to copy sudo templates under /etc/sudoers.d in new MQ servers 
+  become: true
+  become_method: sudo
+  hosts: servers
+  gather_facts: false
+  remote_user: pandiasadmin
+  tasks:
+    - name: Copy sudo template file with owner and permissions
+      copy:
+        src: /home/kpandian/ansible/files/{{ item }}
+        dest: /etc/sudoers.d
+        owner: root
+        group: root
+        mode: '0440'
+      with_items:
+        - 010_STD_MQ_GLB 
+    - name: To add lines in /etc/sudoers before line STA_SA_GLB
+      lineinfile:
+        path: /etc/sudoers
+        insertafter: "#include /etc/sudoers.d/010_STD_SA_GLB"
+        line: "{{ item }}"
+        state: present
+        backup: yes
+      with_items:
+        - "#include /etc/sudoers.d/010_STD_MQ_GLB"
+

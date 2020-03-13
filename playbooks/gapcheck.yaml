@@ -1,0 +1,34 @@
+---
+- name: Playbook to execute gapcheck script and to fetch the output file 
+  become: true
+  become_method: sudo
+  hosts: servers
+  remote_user: pandiasadmin
+  gather_facts: false
+  tasks:
+    - name: Copy GAP check script with owner and permissions
+      copy:
+        src: /home/kpandian/ansible/files/isec_LINUX_V7.0_Modified_21102019.sh
+        dest: /tmp
+        owner: root
+        group: root
+        mode: '0755'
+    - name: Execute GAP check script
+      shell: cd /tmp && sh isec_LINUX_V7.0_Modified_21102019.sh
+      ignore_errors: True
+    - name: Find the Linux,SSH,SUDO gap check files under /tmp and register the output
+      find:
+        paths: /tmp
+        patterns: '*isec*.csv'
+      register: findfiles
+    - name: Fetch files from remote server
+      fetch:
+        src: "{{ item }}"
+        dest: /home/kpandian/ansible/gapoutput/servers1/
+        flat: yes
+      with_items:
+        - "{{ findfiles.files | map(attribute='path') | list }}"
+                                                  
+
+
+

@@ -1,0 +1,14 @@
+---
+- name: Playbook to remove sudo access for user cmfsme
+  hosts: servers
+  remote_user: pandiasadmin
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  tasks:
+  - name: To remove sudo access for cmfsme
+    lineinfile:
+      path: /etc/sudoers
+      regexp: '^cmfsme'
+      state: absent
+      backup: yes

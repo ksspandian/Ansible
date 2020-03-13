@@ -1,0 +1,22 @@
+---
+- name: Modify ulimit for mqm in /etc/security/limits.conf file
+  hosts: servers
+  gather_facts: false
+  become: yes
+  become_method: sudo
+  remote_user: pandiasadmin
+  tasks:
+  - name: Modify ulimit for mqm in /etc/security/limits.conf file
+    lineinfile:
+      path: /etc/security/limits.conf
+      insertafter: "#@student"
+      line: "{{ item }}"
+      state: present
+      backup: yes
+    with_items:
+    - "mqm             soft   nproc          24576"
+    - "mqm             hard   nproc          24576"
+    - "mqm             soft   nofile         20480"
+    - "mqm             hard   nofile         20480"
+    - "# Ulimit for mqm user"
+    - "\n"

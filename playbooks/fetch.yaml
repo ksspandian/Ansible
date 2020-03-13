@@ -1,0 +1,24 @@
+---
+- name: Playbook to fetch the sudo template file 
+  become: true
+  become_method: sudo
+  hosts: servers
+  remote_user: pandiasadmin
+  gather_facts: false
+  tasks:
+    - name: Find the files under /etc/sudoers.d and register the output
+      find:
+        paths: /etc/sudoers.d/
+        patterns: '010*'
+      register: findfiles
+    - name: Fetch files from remote server
+      fetch:
+        src: "{{ item }}"
+        dest: /home/kpandian/ansible/files/
+        flat: yes
+      with_items:
+        - "{{ findfiles.files | map(attribute='path') | list }}"
+                                                  
+
+
+

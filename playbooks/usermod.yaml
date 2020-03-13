@@ -1,0 +1,20 @@
+---
+- name: Playbook to execute usermod command to update gecos field in /etc/passwd 
+  become: true
+  become_method: sudo
+  hosts: servers
+  remote_user: pandiasadmin
+  tasks:
+    - name: Copy usermod script with owner and permissions
+      copy:
+        src: /home/kpandian/ansible/files/iam_extract_ibm.pl
+        dest: /tmp
+        owner: root
+        group: root
+        mode: '0755'
+    - name: Execute usermod script
+      shell: cd /tmp && sh iam_extract_ibm.pl 
+      ignore_errors: True
+
+
+

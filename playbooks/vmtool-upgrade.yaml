@@ -1,0 +1,22 @@
+---
+- name: To upgrade vmware tools on Linux servers
+  become: true
+  become_method: sudo
+  hosts: vmtools
+  remote_user: pandiasadmin
+  gather_facts: false
+  tasks:
+  - name: Extract tar.gz file into /var/tmp
+    unarchive:
+      src: /var/tmp/VMwareTools-10.3.10-12406962.tar.gz
+      dest: /var/tmp
+      mode: '0755'
+      remote_src: yes
+  - name: copy vmtools.sh to remote node
+    copy:
+      src: /home/kpandian/ansible/files/vmtools.sh
+      dest: /var/tmp
+      mode: 0755
+  - name: Launch VMwareTools installation
+    shell: sh /var/tmp/vmtools.sh 
+    ignore_errors: true

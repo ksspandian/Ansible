@@ -1,0 +1,13 @@
+---
+- name: Playbook to patch the servers
+  hosts: servers
+  remote_user: pandiasadmin
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Upgrade all Packages
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+

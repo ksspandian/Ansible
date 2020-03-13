@@ -1,0 +1,12 @@
+---
+- name: Playbook to reboot servers
+  hosts: servers
+  remote_user: pandiasadmin
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  tasks:
+    - name: reboot host
+      shell: sleep 10 && /sbin/shutdown -r now
+      become: true
+      ignore_errors: true

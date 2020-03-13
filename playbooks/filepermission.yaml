@@ -1,0 +1,33 @@
+---
+- name: Changing permission & owner for files
+  hosts: servers
+  gather_facts: false
+  remote_user: pandiasadmin
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: Change permission of files to 755
+    file:
+      path: "{{ item }}"
+      mode: '0755'
+    with_items:
+    - "/var/opt/BESClient/__BESData/__Global/libbfrpm.so"
+    - "/var/opt/BESClient/__BESData/__Global/libbfrpmdb.so"
+    - "/var/opt/BESClient/__BESData/__Global/libbfrpmio.so"
+    - "/var/opt/BESClient/__GTS/jre/bin/ControlPanel"
+  - name: Change permission of files to 644
+    file:
+      path: "{{ item }}"
+      mode: '0644'
+      owner: root
+      group: root
+    with_items:
+    - "/var/opt/BESClient/LMT/CIT/citinstall/installation_instructions.txt"
+  - name: Change owner and group to root:root
+    file:
+      path: "{{ item }}"
+      owner: root
+      group: root
+    with_items:
+    - "/var/opt/BESClient/LMT/CIT/citinstall/CIT_linuxX64.spb"
+    - "/var/opt/BESClient/LMT/CIT/citinstall/wcitinst"

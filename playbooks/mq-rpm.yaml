@@ -1,0 +1,19 @@
+---
+- name: Playbook to install rpm-build package in new MQ servers 
+  become: true
+  become_method: sudo
+  hosts: servers
+  gather_facts: false
+  remote_user: pandiasadmin
+  tasks:
+    - name: Move rpm's under /tmp
+      copy:
+        src: "{{ item }}"
+        dest: /tmp
+        owner: root
+        group: root
+        mode: '0600'
+      with_fileglob:
+        - '/home/kpandian/ansible/files/mqrpm/*.rpm' 
+    - name: Install copied packages
+      shell: "cd /tmp && yum install rpm-build-4.11.3-21.el7.x86_64.rpm bzip2-1.0.6-26.el8.x86_64.rpm unzip-6.0-20.el7.x86_64.rpm elfutils-0.166-2.el7.x86_64.rpm redhat-rpm-config-9.1.0-87.el7.noarch.rpm dwz-0.11-3.el7.x86_64.rpm zip-3.0-11.el7.x86_64.rpm perl-srpm-macros-1-8.el7.noarch.rpm perl-Thread-Queue-3.02-2.el7.noarch.rpm gdb-7.6.1-115.el7.x86_64.rpm -y"
