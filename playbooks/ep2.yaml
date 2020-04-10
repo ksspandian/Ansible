@@ -1,22 +1,40 @@
 ---
-- name: Playbook to copy, extract, execute EP2 script
+- name: Playbook to execute EP2 in background 
   become: true
   become_method: sudo
   hosts: servers
   remote_user: pandiasadmin
+
   tasks:
-    - name: Copy EP2script zip file to /var/tmp location with owner and permissions
+
+    - name: Copy EP2 to remote servers with owner and permissions
       copy:
-        src: /home/vengatr1/ansible/files/EP2441.20180813-020620-597.gold.tar.gz
-        dest: /tmp
+        src: /home/kpandian/ansible/files/EP2v4_5.zip
+        dest: /opt/IBM/
         owner: root
         group: root
         mode: '0644'
-    - name:  Creating the directory structure for EP2.
-      shell: cd /home/vengatr1  && mkdir EP2v4.4.1
-    - name:  Untar the EP2 zip file
-      shell: cd /home/vengatr1/EP2v4.4.1 && tar -xzvf /tmp/EP2441.20180813-020620-597.gold.tar.gz
-    - name:  Execute the EP2 driver Script
-      shell: nohup /bin/sh /home/vengatr1/EP2v4.4.1/app/EP2Source/EP2_CORE_BASH/EP2_Driver.sh -A -C 0 > /var/tmp/ep2_autocorrect.out &
 
+    - name: Install unzip package to extract EP2
+      yum:
+        name: unzip
+        state: present
+
+    - name: Extract EP2 into /opt/IBM
+      unarchive:
+        src: /opt/IBM/EP2v4_5.zip
+        dest: /opt/IBM/
+        remote_src: yes
+
+    - name: Changing file permission to root
+      file:
+        path: /opt/IBM/EP2v4.5
+        owner: root
+        group: root 
+        mode: '754'
+        recurse: yes
+
+    - name: Execute EP2 in background
+      shell: cd /opt/IBM/EP2v4.5/app/EP2Source/EP2_CORE_BASH/ && nohup sh EP2_Driver.sh -P &
+      ignore_errors: True
 
