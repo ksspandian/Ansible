@@ -1,0 +1,39 @@
+---
+- name: Playbook to execute mef3 script and to fetch the output file 
+  become: true
+  become_method: sudo
+  hosts: servers
+  remote_user: pandiasadmin
+
+  tasks:
+
+  - name: Find the EP2 output directory under /tmp/EP2_Driver.sh.files and register the output
+    find:
+      paths: /tmp/EP2_Driver.sh.files
+      patterns: '2020*'
+      file_type: directory
+      age: "-1d"
+    register: finddir
+
+  - name: Find the EP2 output files under directory in /tmp/EP2_Driver.sh.files and register the output
+    find:
+      paths: "{{ finddir.files | map(attribute='path') | list }}"
+      patterns: '*'
+    register: findfiles
+
+  - name: Fetch mef3 files from remote server
+    fetch:
+      src: "{{ item }}"
+      dest: /home/kpandian/ansible/ep2output/{{ inventory_hostname }}/
+      flat: yes
+    with_items:
+    - "{{ findfiles.files | map(attribute='path') | list }}"
+
+
+#  - name: Debug the registered result
+#    debug: 
+#      var: findfiles.files | map(attribute='path') | list
+
+
+
+
