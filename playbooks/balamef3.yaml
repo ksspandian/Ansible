@@ -1,0 +1,42 @@
+---
+- name: Playbook to execute mef3 perl script and to fetch the output file 
+  become: true
+  become_method: sudo
+  hosts: servers
+  gather_facts: false
+  remote_user: pandiasadmin
+
+  tasks:
+
+#    - name: Add gecos field to all users in /etc/passwd
+#      shell: cut -d ":"  -f 1 /etc/passwd > passcut; for a in `cat passcut`; do /usr/sbin/usermod -c "744/S/*AMTAXA/IBM/AMTRAK UNIX SSO Team" $a; done
+
+    - name: Copy mef3 perl script with owner and permissions
+      copy:
+        src: /home/kpandian/ansible/files/iam_extract_ibm.pl
+        dest: /tmp
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Execute mef3 script
+      shell: cd /tmp && ./iam_extract_ibm.pl --customer AMTRAK
+      ignore_errors: True
+
+    - name: Find the mef3 files under /tmp and register the output
+      find:
+        paths: /tmp
+        patterns: '*.mef3'
+        age: "-1h"
+      register: findfiles
+
+    - name: Fetch mef3 files from remote server
+      fetch:
+        src: "{{ item }}"
+        dest: /home/kpandian/ansible/mef3output/bala/
+        flat: yes
+      with_items:
+        - "{{ findfiles.files | map(attribute='path') | list }}"
+
+
+

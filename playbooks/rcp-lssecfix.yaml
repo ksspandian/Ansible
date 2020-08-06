@@ -1,0 +1,42 @@
+---
+- name: Playbook to execute lssec script and to fetch the output file
+  become: true
+  become_method: sudo
+  hosts: servers
+  remote_user: pandiasadmin
+  gather_facts: false
+  
+  tasks:
+    
+    - name: Copy lssecfix file with owner and permissions
+      copy:
+        src: /home/kpandian/Desktop/lssecfix.zip
+        dest: /tmp
+        owner: root
+        group: root
+        mode: '0644'
+    
+    - name: Extract lssecfix.zip file into /tmp
+      unarchive:
+        src: /tmp/lssecfix.zip
+        dest: /tmp
+        remote_src: yes
+    
+    - name: Changing file permission to root
+      file:
+        path: /tmp/lssecfix/
+        owner: root
+        group: root
+        mode: '754'
+        recurse: yes
+    
+    - name: Execute lssecfixes
+      shell: cd /tmp/lssecfix/ && perl AG_lssecfixes_wrapper.pl > {{ inventory_hostname }}.txt
+      ignore_errors: True
+    
+    - name: Fetching the file and copy to your laptop
+      fetch:
+        src: /tmp/lssecfix/{{ inventory_hostname }}.txt
+        dest: /home/kpandian/ansible/lssecfixoutput/{{ inventory_hostname }}.txt
+        flat: yes
+

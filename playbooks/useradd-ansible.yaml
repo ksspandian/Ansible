@@ -1,0 +1,42 @@
+---
+- name: Playbook to create new user ansible with authorized_key and provide sudo access
+  hosts: servers
+  remote_user: pandiasadmin
+  become: yes
+  become_method: sudo
+  gather_facts: false
+
+  tasks:
+
+  - name: Creating user ansible
+    user:
+      name: "{{ item.user }}"
+      state: present
+      shell: /bin/bash
+    with_items:
+    - user: "ansible" 
+
+  - name: Copy public key to ansible user to enable password less connectivity from Satellite server
+    authorized_key:
+      user: ansible
+      state: present
+      key: "{{ lookup('file', '/home/kpandian/ansible/files/ansiblepubkey') }}"
+      key_options: 'from="10.14.10.167"'
+
+#  - name: Copy Ansible sudo template to /etc/sudoers.d
+#    copy:
+#      src: /home/kpandian/ansible/files/ansible_satellite_patching
+#      dest: /etc/sudoers.d
+#      owner: root
+#      group: root
+#      mode: '0640'
+
+#  - name: To provide sudo access for ansible from sudo template /etc/sudoers.d/ansible_satellite_patching
+#    lineinfile:
+#      path: /etc/sudoers
+#      insertbefore: "#  Lockdown"
+#      line: "{{ item }}"
+#      state: present
+#      backup: yes
+#    with_items:
+#    - "#include /etc/sudoers.d/ansible_satellite_patching"

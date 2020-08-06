@@ -1,0 +1,50 @@
+---
+- name: Playbook to install mandiant (fireeye) agent on Linux servers
+  hosts: servers
+  gather_facts: true
+  become: yes
+  become_method: sudo
+
+  tasks:
+
+    - name: Create directory FireEye under /root
+      file:
+        path: /root/FireEye
+        state: directory
+        mode: '0755'
+
+    - name: Copy installation package to remote server under /root
+      copy:
+        src: /home/kpandian/ansible/files/IMAGE_HX_AGENT_LINUX_31.28.4.tgz
+        dest: /root/FireEye
+        owner: root
+        group: root
+        mode: '0755'
+      register: xagt_copy
+
+    - name: Extract installation package
+      shell: cd /root/FireEye && tar -xzvf IMAGE_HX_AGENT_LINUX_31.28.4.tgz
+      when: xagt_copy is changed
+
+    - name: Install FireEye agent on RHEL6
+      shell: cd /root/FireEye && rpm -ivh xagt-31.28.4-1.el6.x86_64.rpm
+      when:
+        - ansible_distribution_major_version == "6"
+        - xagt_copy is changed
+
+    - name: Install FireEye agent on RHEL7
+      shell: cd /root/FireEye && rpm -ivh xagt-31.28.4-1.el7.x86_64.rpm
+      when:
+        - ansible_distribution_major_version == "7"
+        - xagt_copy is changed
+
+    - name: Import agent configuration file
+      shell: cd /root/FireEye && /opt/fireeye/bin/xagt -i agent_config.json
+      when: xagt_copy is changed
+
+    - name: Start the FireEye service - xagt
+      service:
+        name: xagt
+        state: restarted
+        enabled: yes
+      when: xagt_copy is changed

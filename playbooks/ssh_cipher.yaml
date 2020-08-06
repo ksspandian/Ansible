@@ -2,11 +2,17 @@
 - name: To remove cbc & arcfour algorithms in SSH
   hosts: servers
   gather_facts: false
+  remote_user: pandiasadmin
+  become: true
+  become_method: sudo
+
   tasks:
+
   - name: To find the Ciphers line
     shell: 'grep ^Cipher /etc/ssh/sshd_config'
     ignore_errors: true
     register: grep_ciphers
+
   - name: To replace existing Ciphers if exist  
     replace:
       path: /etc/ssh/sshd_config
@@ -15,17 +21,19 @@
       backup: yes
     when: grep_ciphers.stdout != ""
     notify: restart ssh service
-  - name: To add Ciphers line to exclude arcfour & cbc
+
+  - name: To add Ciphers line at the end of SSH config file to exclude arcfour & cbc
     lineinfile:
       path: /etc/ssh/sshd_config
-      insertafter: '#RekeyLimit'
       line: '{{ item }}'
       backup: yes
     when: grep_ciphers.stdout == ""
     with_items:
     - 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr'
     - '# Restrict Cipher to exclude arcfour & cbc'
+    - '\n'
     notify: restart ssh service
+
   handlers:
   - name: restart ssh service
     service:

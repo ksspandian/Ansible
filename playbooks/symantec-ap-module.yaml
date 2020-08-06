@@ -1,0 +1,14 @@
+---
+- name: Playbook to build AutoProtect kernel module Symantec Endpoint Protection to 14.2.2
+  hosts: servers
+  gather_facts: false
+  become: yes
+  become_method: sudo
+  remote_user: pandiasadmin
+
+  tasks:
+
+    - name: Build AutoProtect Kernel module for running kernel
+      shell: cd /var/tmp/SymantecEndpointProtection/src/ && tar -xjvf ap-kernelmodule.tar.bz2 && cd /var/tmp/SymantecEndpointProtection/src/ap-kernelmodule-14.2.5323-2000 && ./build.sh --kernel-dir /lib/modules/$(uname -r)/build
+      ignore_errors: True
+

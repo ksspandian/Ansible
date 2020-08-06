@@ -29,7 +29,7 @@
     - name: Fetch files from remote server
       fetch:
         src: "{{ item }}"
-        dest: /home/kpandian/ansible/gapoutput/servers1/
+        dest: /home/kpandian/ansible/gapoutput/jul20/
         flat: yes
       with_items:
         - "{{ findfiles.files | map(attribute='path') | list }}"

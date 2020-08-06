@@ -1,0 +1,12 @@
+---
+- name: Playbook to execute cronjob output script and to fetch the output file
+  become: true
+  become_method: sudo
+  hosts: cdijp
+  remote_user: vengatr1
+  tasks:
+    - name: Execute the shell script for cronjob output
+      script: /home/vengatesh/ansible/files/cronjoboutput.sh
+      register: output
+
+    - debug: var=output.stdout_lines

@@ -1,0 +1,17 @@
+---
+- name: Playbook to schedule EP2 script in Preview mode
+  become: true
+  become_method: sudo
+  hosts: servers
+  
+  tasks:
+    - name: Scheduling job for EP2 on 16th of every month
+      cron:
+        name: "Schedule for EP2 scans on 16th of every month"
+        minute: "0"
+        hour: "1"
+        day: "16"
+        month: "*"
+        weekday: "*"
+        job: "/opt/IBM/EP2v4.5/app/EP2Source/EP2_CORE_BASH/EP2_Driver.sh -P  > /opt/IBM/EP2v4.5/app/EP2Source/EP2_CORE_BASH/EP2_Driver.log 2>&1"
+

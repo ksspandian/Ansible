@@ -1,0 +1,49 @@
+---
+- name: Playbook to install Symantec Endpoint Protection 14.2.2
+  hosts: servers
+  gather_facts: false
+  become: yes
+  become_method: sudo
+  remote_user: pandiasadmin
+
+  tasks:
+
+#    - name: To copy Symantec client package to remote server
+#      copy:
+#        src: /home/kpandian/ansible/files/symantecendpoint-14.2.2.zip
+#        dest: /var/tmp
+#        owner: root
+#        group: root
+#        mode: '0755'
+
+    - name: Install gcc, unzip, Kernel-headers & Kernel-devel same as that of running kernel 
+      shell: yum install -y kernel-headers-$(uname -r) kernel-devel-$(uname -r) gcc unzip
+      ignore_errors: True
+
+#    - name: Extract SEP client into /var/tmp
+#      unarchive:
+#        src: /var/tmp/symantecendpoint-14.2.2.zip
+#        dest: /var/tmp
+#        remote_src: yes
+
+    - name: Changing directory ownership to root
+      file:
+        path: /var/tmp/SymantecEndpointProtection
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Changing file permission to root
+      file:
+        path: "{{ item }}"
+        owner: root
+        group: root 
+        mode: '0775'
+      with_items:
+      - /var/tmp/SymantecEndpointProtection/install.sh
+      - /var/tmp/SymantecEndpointProtection/pkg.sig
+
+    - name: Install Symantec Endpoint client
+      shell: PATH=/usr/lib64/qt-3.3/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin && cd /var/tmp/SymantecEndpointProtection && nohup ./install.sh -i </dev/null >/var/tmp/sepinstall.log 2>&1 &
+      ignore_errors: True
+

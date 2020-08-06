@@ -1,0 +1,19 @@
+---
+- name: Playbook to create new user Shaik with passwords and provide sudo access
+  hosts: servers
+  remote_user: kpandian
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  tasks:
+  - name: Creating user Shaik
+    user:
+      name: "{{ item.user }}"
+#      password: "{{ item.password }}"
+      group: osadmin
+      update_password: always
+    with_items:
+    - user: "shvali11"
+#    - password: '$6$SpPDTF9cN0.Jedcg$NUNegyXh4fJQPFseSTOWN8z9JLFVrwOYNswl973We78XWm25ghuN0I9rGe6Kz1Z0DWYZcbIcPwx0weBCJFmgV1'
+#  - name: Forcing user to change password on first logon
+#    command: chage -d 0 shvali11

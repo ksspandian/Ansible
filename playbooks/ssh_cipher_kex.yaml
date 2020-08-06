@@ -1,0 +1,68 @@
+---
+- name: To remove cbc & arcfour algorithms in SSH
+  hosts: servers
+  gather_facts: false
+  remote_user: pandiasadmin
+  become: true
+  become_method: sudo
+
+  tasks:
+
+  - name: To find the Ciphers line
+    shell: 'grep ^Cipher /etc/ssh/sshd_config'
+    ignore_errors: true
+    register: grep_ciphers
+
+  - name: To replace existing Ciphers if exist  
+    replace:
+      path: /etc/ssh/sshd_config
+      regexp: '(^Ciphers\s)(.*)$'
+      replace: '\1aes128-ctr,aes192-ctr,aes256-ctr'
+      backup: yes
+    when: grep_ciphers.stdout != ""
+    notify: restart ssh service
+
+  - name: To add Ciphers line at the end of SSH config file to exclude arcfour & cbc
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      line: '{{ item }}'
+      backup: yes
+    when: grep_ciphers.stdout == ""
+    with_items:
+    - "\n"
+    - "# Restrict Cipher to exclude arcfour & cbc"
+    - "Ciphers aes128-ctr,aes192-ctr,aes256-ctr"
+    notify: restart ssh service
+
+  - name: To find the KeyExchange algorithm line
+    shell: 'grep ^KexAlgorithms /etc/ssh/sshd_config'
+    ignore_errors: true
+    register: grep_KexAlgorithms
+
+  - name: To replace existing KexAlgorithms if exist
+    replace:
+      path: /etc/ssh/sshd_config
+      regexp: '(^KexAlgorithms\s)(.*)$'
+      replace: '\1diffie-hellman-group-exchange-sha256,diffie-hellman-group-exchange-sha1'
+      backup: yes
+    when: grep_KexAlgorithms.stdout != ""
+    notify: restart ssh service
+
+  - name: To add KexAlgorithms line at the end of SSH config file to exclude arcfour & cbc
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      line: '{{ item }}'
+      backup: yes
+    when: grep_KexAlgorithms.stdout == ""
+    with_items:
+    - "\n"
+    - "# Restrict KexAlgorithms to exclude diffie-hellman-group1-sha1, diffie-hellman-group14-sha1"
+    - "KexAlgorithms diffie-hellman-group-exchange-sha256,diffie-hellman-group-exchange-sha1"
+    notify: restart ssh service
+
+
+  handlers:
+  - name: restart ssh service
+    service:
+      name: sshd
+      state: restarted 

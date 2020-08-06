@@ -2,7 +2,7 @@
 - name: To remediate Health check violations
   hosts: servers
   gather_facts: false
-  remote_user: pandiasadmin
+  remote_user: root
   become: yes
   become_method: sudo
   tasks:

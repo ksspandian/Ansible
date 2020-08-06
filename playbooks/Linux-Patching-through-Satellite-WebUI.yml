@@ -1,0 +1,182 @@
+---
+- name: Ansible-Patching-Linux-SERVERS Playbook
+  hosts: all
+  vars:
+    ansible_ssh_user: ansible
+    remote_execution_ssh_user: ansible
+  tasks:
+    - name: UPDATE YUM CACHE
+      yum:
+        update_cache: yes
+      register: yum_cache
+
+    - name: CACHE state
+      debug:
+        msg: "{{ yum_cache.msg }}"
+
+    - name: GET UPDATES
+      yum:
+        list: updates
+      register: yum_update
+
+    - name: SHOW UPDATES
+      debug:
+        msg: "{{ yum_update.results }}"
+
+    - name: UPDATING ALL PACKAGES
+      yum:
+        name: '*'
+        state: latest
+      register: yum_update_pkg
+
+    - name: SHOW UPDATES
+      debug:
+        msg: "{{ yum_update_pkg.results }}"
+
+    - name: Comparing last kernel and running kernel
+      shell: |
+        LAST_KERNEL=$(rpm -q --last kernel | perl -pe 's/^kernel-(\S+).*/$1/' | head -1)
+        CURRENT_KERNEL=$(uname -r)
+
+        if [[ $LAST_KERNEL != $CURRENT_KERNEL ]]; then
+          touch /tmp/reboot
+        fi
+
+    - name: Checking if OS reboot flag exists
+      stat:
+        path: /tmp/reboot
+      register: reboot
+
+    - name: GFS2 PATCH ROUTINE
+      script: /etc/ansible/scripts/gfs2check.sh
+      register: gfs_check
+      when: reboot.stat.exists == true
+
+    - name: GFS2_OUTPUT
+      debug:
+        msg: "{{ gfs_check.stdout }}"
+      when: reboot.stat.exists == true
+
+    - name: Rebooting host(s).
+      shell: sleep 2 && /sbin/shutdown -r now "Reboot required for updated kernel." && sleep 2
+      async: 20
+      poll: 0
+      when: reboot.stat.exists == true
+
+    - name: Waiting for host(s) to reboot
+      wait_for_connection:
+        delay: 60
+        timeout: 420
+      when: reboot.stat.exists == true
+
+    - name: Checking if VMWare-Tools Update is Required
+      shell: |
+        OSR=$(uname -r | grep "^2.6")
+        if [[ $OSR != "" ]]; then
+           touch /tmp/second-reboot
+        fi
+      when: reboot.stat.exists == true
+
+    - name: Checking if VMWare Tools Update Flag Exists
+      stat:
+        path: /tmp/second-reboot
+      register: secondreboot
+
+    - name: Open VM Tools Check
+      shell: |
+        OSR=$(uname -r)
+        OSR=$(uname -r | grep "^2.6")
+        if [[ $OSR != "" ]]; then
+           echo "This OS is RHEL V6: $OSR"
+           echo "open-vm-tools check not applicable."
+        else
+           echo "The OS is at RHEL V7 or higher: $OSR"
+           VMT=$(rpm -qa | grep open-vm-tools)
+           if [[ $VMT == "" ]]; then
+              echo "open-vm-tools is not installed!"
+              echo "You should install open-vm-tools!"
+           else
+              echo "open-vm-tools is installed: $VMT"
+              echo "No reconfiguration required, this was done during patching."
+              echo "No Second reboot required."
+           fi
+        fi
+      register: novmwaretools
+      when: secondreboot.stat.exists == false
+
+    - name: Open VM Tools Out
+      debug:
+        msg: "{{ novmwaretools.stdout }}"
+      when: secondreboot.stat.exists == false
+
+    - name: Updating VMWare-Tools
+      command: /usr/bin/vmware-config-tools.pl -d
+      register: vmwaretoolsupdate
+      when: secondreboot.stat.exists == true
+      ignore_errors: yes
+
+    - name: VMWare-Tools Update Out
+      debug:
+        msg: "{{ vmwaretoolsupdate.stdout }}"
+      when: secondreboot.stat.exists == true
+
+      #PERFORM GFS2 CLUSTER SHUTDOWN ROUTINE AGAIN TO HANDLE SECOND REBOOT
+    - name: GFS2 PATCH ROUTINE
+      script: /etc/ansible/scripts/gfs2check.sh
+      register: gfs_check
+      when: secondreboot.stat.exists == true
+
+    - name: GFS2_OUTPUT
+      debug:
+        msg: "{{ gfs_check.stdout }}"
+      when: secondreboot.stat.exists == true
+
+    - name: Rebooting host(s).
+      shell: sleep 2 && /sbin/shutdown -r now "Reboot required for VMWare-Tools updat." && sleep 2
+      async: 20
+      poll: 0
+      when: secondreboot.stat.exists == true
+
+    - name: Waiting for host(s) to reboot
+      wait_for_connection:
+        delay: 60
+        timeout: 420
+      when: secondreboot.stat.exists == true
+
+    - name: Clearing OS reboot flag
+      file:
+        path: /tmp/reboot
+        state: absent
+      when: reboot.stat.exists == true
+
+    - name: Clearing VMWare Tools Reboot Flag
+      file:
+        path: /tmp/second-reboot
+        state: absent
+      when: secondreboot.stat.exists == true
+
+    - name: PERFORMING OS VERIFICATION
+      command: 'uname -a; uptime'
+      changed_when: false
+      register: verify
+
+    - name: VERIFY OUT
+      debug:
+        msg: "{{ verify.stdout }}"
+
+    - name: Performing GFS2 Cluster Verification
+      shell: |
+        #CHECK IF THIS IS A RGMANAGER CLUSTER OR A PCS CLUSTER
+        RGCHK=$(/usr/sbin/cman_tool status 2>/dev/null)
+        PCSCHK=$(/sbin/pcs status 2>/dev/null)
+
+        if [[ $RGCHK != "" ]]; then
+           echo $RGCHK
+        else
+           echo $PCSCHK
+        fi
+      register: gfs2verify
+
+    - name: GFS2 Cluster Verify Out
+      debug:
+        msg: "{{ gfs2verify.stdout }}"

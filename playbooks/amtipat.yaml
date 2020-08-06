@@ -1,0 +1,44 @@
+---
+- name: Playbook to copy public key to amtipat2 & amtipat1 authorized_key and provide sudo access
+  hosts: servers
+  become: yes
+  become_method: sudo
+  gather_facts: false
+
+  tasks:
+
+  - name: Check whether sudo access is provided for automata group
+    shell: grep -i 152_CACF_EP_GLB /etc/sudoers
+    ignore_errors: true
+    register: grep_cacf
+
+  - name: Copy public key to amtipat2 user to enable password less connectivity from Ansible tower
+    authorized_key:
+      user: amtipat2
+      state: present
+      key: "{{ lookup('file', '/home/kpandian/ansible/files/authorized_keys.endpoint.amtipat2.includesFrom') }}"
+
+  - name: Copy public key to amtipat1 user to enable password less connectivity from Ansible tower
+    authorized_key:
+      user: amtipat1
+      state: present
+      key: "{{ lookup('file', '/home/kpandian/ansible/files/authorized_keys.endpoint.amtipat2.includesFrom') }}"
+
+  - name: Copy CACF ansible tower sudo template to /etc/sudoers.d
+    copy:
+      src: /home/kpandian/ansible/files/152_CACF_EP_GLB
+      dest: /etc/sudoers.d
+      owner: root
+      group: root
+      mode: '0640'
+
+  - name: To provide sudo access for automata from sudo template /etc/sudoers.d/152_CACF_EP_GLB
+    lineinfile:
+      path: /etc/sudoers
+      insertafter: "#include /etc/sudoers.d/123_AE_GLB"
+      line: "{{ item }}"
+      state: present
+      backup: yes
+    when: grep_cacf.stdout == ""
+    with_items:
+    - "#include /etc/sudoers.d/152_CACF_EP_GLB"

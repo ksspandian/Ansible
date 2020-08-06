@@ -1,0 +1,44 @@
+---
+- name: Playbook to upgrade / install Symantec Endpoint Protection to 14.2.2
+  hosts: servers
+  gather_facts: true
+  become: yes
+  become_method: sudo
+#  remote_user: pandiasadmin
+
+  tasks:
+  - name: To check whether Symantec client is installed
+    shell: "cd /opt/Symantec/symantec_antivirus/ && ./sav info -p"
+    ignore_errors: true
+    register: symantecversion
+
+  - name: Registering Symantec install status & version
+    set_fact:
+      result: >
+        {{ 'not installed' if (symantecversion.stdout == "")
+        
+
+
+  - name: Uninstall Symantec client if older version is installed
+    shell: echo "working correctly"
+#    shell: "cd /opt/Symantec/symantec_antivirus/ && echo y | ./uninstall.sh"
+    when: 
+
+#  - name: Uninstall Symantec if installed
+#    shell: "cd /opt/Symantec/symantec_antivirus/ && ./sav info -d"
+#    when: symantecversion.stdout != ""
+
+#  - name: Check debug
+#    debug:
+#      var: symantecversion.stdout 
+
+#  - name: Symantec status
+#    debug:
+#      msg: Symantec 14.2 is installed
+#    when: "'14.2' in symantecversion.stdout"
+
+#  - name: Symantec status
+#    debug:
+#      msg: Symantec 14.2 is not installed / lower version installed
+#    when: "'14.2' not in symantecversion.stdout"
+
