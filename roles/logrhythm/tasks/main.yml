@@ -1,0 +1,123 @@
+---
+# tasks file for logrhythm
+
+- name: To verify if Logrhythm (scsm) agent is installed and if it is version is 7.4.10
+  package_facts:
+    manager: rpm
+
+- name: set facts
+  set_fact:
+    scsm_ver: "{{ ansible_facts.packages['scsm'][0].version }}"
+  when: '"scsm" in ansible_facts.packages'
+
+- name: Upgrade Logrhythm (scsm) package to 7.4.10 if already installed
+  block:
+    - name: Copy Logrhythm (scsm) package to RHEL6
+      copy:
+        src: scsm-7.4.10.8003-1.el6.x86_64.rpm
+        dest: /var/tmp/
+        owner: root
+        group: root
+        mode: '0755'
+      when: ansible_distribution_major_version == "6"
+
+    - name: Copy Logrhythm (scsm) package to RHEL7
+      copy:
+        src: scsm-7.4.10.8003-1.el7.x86_64.rpm
+        dest: /var/tmp/
+        owner: root
+        group: root
+        mode: '0755'
+      when: ansible_distribution_major_version == "7"
+
+    - name: Install pre-requisite package audit for install / upgrade of LR 7.4.x
+      yum:
+        name: audit
+        state: present
+
+    - name: Upgrade Logrhythm (scsm) package if already installed on RHEL6
+      yum:
+        name: /var/tmp/scsm-7.4.10.8003-1.el6.x86_64.rpm
+        state: present
+      when: ansible_distribution_major_version == "6"
+
+    - name: Upgrade Logrhythm (scsm) package if already installed on RHEL7
+      yum:
+        name: /var/tmp/scsm-7.4.10.8003-1.el7.x86_64.rpm
+        state: present
+      when: ansible_distribution_major_version == "7"
+
+    - name: Restart service after upgrade
+      service:
+        name: scsm
+        state: restarted
+        enabled: yes
+
+  when:
+    - scsm_ver is defined
+    - scsm_ver != "7.4.10.8003"
+
+- name: Install Logrhythm (scsm) package 7.4.10 if not installed
+  block:
+    - name: Copy Logrhythm (scsm) package to RHEL6
+      copy:
+        src: scsm-7.4.10.8003-1.el6.x86_64.rpm
+        dest: /var/tmp/
+        owner: root
+        group: root
+        mode: '0755'
+      when: ansible_distribution_major_version == "6"
+
+    - name: Copy Logrhythm (scsm) package to RHEL7
+      copy:
+        src: scsm-7.4.10.8003-1.el7.x86_64.rpm
+        dest: /var/tmp/
+        owner: root
+        group: root
+        mode: '0755'
+      when: ansible_distribution_major_version == "7"
+
+    - name: Install pre-requisite package audit for install / upgrade of LR 7.4.x
+      yum:
+        name: audit
+        state: present
+
+    - name: Install Logrhythm (scsm) package on RHEL6
+      yum:
+        name: /var/tmp/scsm-7.4.10.8003-1.el6.x86_64.rpm
+        state: present
+      when: ansible_distribution_major_version == "6"
+
+    - name: Install Logrhythm (scsm) package on RHEL7
+      yum:
+        name: /var/tmp/scsm-7.4.10.8003-1.el7.x86_64.rpm
+        state: present
+      when: ansible_distribution_major_version == "7"
+
+    - name: copy template
+      template:
+        src: scsm.ini.j2
+        dest: /opt/logrhythm/scsm/config/scsm.ini
+        owner: root
+        group: root
+        mode: '0664'
+      notify: Restart scsm service
+
+  when:
+    - scsm_ver is undefined
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

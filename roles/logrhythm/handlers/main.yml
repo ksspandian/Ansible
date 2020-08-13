@@ -1,0 +1,9 @@
+---
+# handlers file for logrhythm
+
+- name: Restart scsm service
+  service:
+    name: scsm
+    state: restarted
+    enabled: yes
+

@@ -1,12 +1,14 @@
 ---
-- name: Playbook to execute cronjob output script and to fetch the output file
+- name: Playbook to execute cronjob output script to find EP2 entry and to fetch the output
   become: true
   become_method: sudo
-  hosts: cdijp
-  remote_user: vengatr1
+  hosts: servers
+
   tasks:
-    - name: Execute the shell script for cronjob output
-      script: /home/vengatesh/ansible/files/cronjoboutput.sh
+
+    - name: Execute the shell script to find EP2 entry in cronjob
+      script: /root/ansible/files/cronjoboutput.sh
       register: output
 
-    - debug: var=output.stdout_lines
+    - debug:
+        msg: "{{ output.stdout_lines }}"

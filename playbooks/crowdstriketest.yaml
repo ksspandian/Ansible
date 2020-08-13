@@ -1,0 +1,71 @@
+---
+- name: playbook to install / upgrade crowdstrike
+  hosts: servers
+  gather_facts: true
+  become: yes
+  become_method: sudo
+
+  tasks:
+
+  - name: package facts
+    package_facts:
+      manager: rpm
+    register: output
+
+#  - name: set facts
+#    set_fact:
+#      falcon_state: notinstalled
+#    when: '"falcon-sensor" not in ansible_facts.packages'
+
+#  - debug:
+#      var: falcon_state
+
+  - name: set facts
+    set_fact:
+      falcon_ver: "{{ ansible_facts.packages['falcon-sensor'][0].version }}"
+    when: '"falcon-sensor" in ansible_facts.packages'
+
+  - debug:
+      var: falcon_ver
+
+  - name: final test
+    shell: uname -a; uptime
+    when:
+      - falcon_ver is undefined or
+        falcon_ver != "5.26.0"
+
+#  - name: display falcon-sensor
+#    debug:
+#      var: ansible_facts.packages['falcon-sensor']
+      
+
+
+#  - name: Check if crowdstrike is installed
+#    yum:
+#      list: falcon-sensor
+#    register: falcon
+
+#  - name: remove old version of crowdstrike
+#    package:
+#      name: falcon-sensor
+#      state: absent
+#    when: '"5.26" not in falcon.stdout'
+
+
+#  - name: Crowdstrike 4.18 is installed
+#    debug:
+#      msg: 4.18 is installed
+#    when:
+#      - falcon.stdout != ""
+#      - '"5.26" not in falcon.stdout'
+
+#  - name: crowdstrike is not installed
+#    debug:
+#      msg: crowdstrike is not installed
+#    when: '"4.18" not in falcon.stdout'
+
+#  - name: crowdstrike 5.26 is installed
+#    debug:
+#      msg: 5.26 is installed
+#    when:
+#      - '"5.26" in falcon.stdout'

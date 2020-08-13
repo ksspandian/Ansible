@@ -1,0 +1,9 @@
+---
+- name: To install / upgrade (uninstall & install) crowdstike agents to version 5.26
+  hosts: servers
+  gather_facts: true
+  become: yes
+  become_method: sudo
+
+  roles:
+    - crowdstrike

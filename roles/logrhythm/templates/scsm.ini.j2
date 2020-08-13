@@ -1,0 +1,47 @@
+#######################################################################
+# LogRhythm System Monitor Agent Configuration File
+# Copyright 2008-2017 LogRhythm, Inc.
+#
+# Comments begin with '#', blank lines are ignored
+#######################################################################
+
+# Mediator sections - up to 3 Mediators are supported
+# Each Mediator has its own section with an incrementing header number: [Mediator n]
+#[Mediator 1]
+
+# IP address or DNS name of the Mediator this Agent will connect to.
+#Host=CHANGE_THIS
+
+# Port number the Mediator is listening on
+#ServerPort=443
+
+# IP address or index of the address to use for transmitting messages to the Mediator.
+# This is either a static IP v4/v6 address (recommended) or the zero-based index of the
+# address to use from a list of all available IP addresses.  The family (i.e., IP v4/v6)
+# is dependent on the Host property above.  Valid values are:
+#
+#    - static IP v4/v6 Address
+#    - index of address to use, for example:
+#        - '0' for the first available IP address
+#        - '2' for the third available IP address
+#ClientAddress=0
+
+# Port number to use for transmitting messages to the Mediator.
+#ClientPort=3333
+
+[Mediator 1]
+Host=10.14.10.18
+ServerPort=443
+ClientAddress={{ ansible_default_ipv4.address }}
+ClientPort=3333
+
+[Mediator 2]
+Host=10.14.10.80
+ServerPort=443
+ClientAddress={{ ansible_default_ipv4.address }}
+ClientPort=3333
+
+[General]
+# Default scsm.log logging level is VERBOSE
+LogLevel=4
+

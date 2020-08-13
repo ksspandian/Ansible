@@ -3,7 +3,7 @@
   become: true
   become_method: sudo
   hosts: servers
-  
+
   tasks:
     - name: Scheduling job for EP2 on 16th of every month
       cron:

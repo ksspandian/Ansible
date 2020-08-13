@@ -1,0 +1,59 @@
+---
+# tasks file for crowdstrike
+
+- name: To verify if crowdstrike (falcon-sensor) agent is installed
+  command: rpm -qa | grep -i falcon-sensor
+  ignore_errors: true
+  register: falcon
+
+- name: To uninstall old version of crowdstrike (falcon-sensor) agent if already installed
+  package:
+    name: falcon-sensor
+    state: absent
+  when: '"5.26" not in falcon.stdout'
+
+- name: Copy RHEL6 crowdstrike (falcon-sensor) agent to remote servers
+  copy:
+    src: falcon-sensor-5.26.0-9003.el6.x86_64.rpm
+    dest: /var/tmp/
+    owner: root
+    group: root
+    mode: '0755'
+  when:
+    - ansible_distribution_major_version == "6"
+    - '"5.26" not in falcon.stdout'
+
+- name: Copy RHEL7 crowdstrike (falcon-sensor) agent to remote servers
+  copy:
+    src: falcon-sensor-5.26.0-9003.el7.x86_64.rpm
+    dest: /var/tmp/
+    owner: root
+    group: root
+    mode: '0755'
+  when:
+    - ansible_distribution_major_version == "7"
+    - '"5.26" not in falcon.stdout'
+
+- name: Install crowdstrike (falcon-sensor) agent on RHEL6
+  shell: cd /var/tmp && yum install falcon-sensor-5.26.0-9003.el6.x86_64.rpm -y
+  when:
+    - ansible_distribution_major_iversion == "6"
+    - '"5.26" not in falcon.stdout'
+
+- name: Install crowdstrike (falcon-sensor) agent on RHEL7
+  shell: cd /var/tmp && yum install falcon-sensor-5.26.0-9003.el7.x86_64.rpm -y
+  when:
+    - ansible_distribution_major_version == "7"
+    - '"5.26" not in falcon.stdout'
+
+- name: Set falcon-sensor with CID
+  shell: /opt/CrowdStrike/falconctl -s --cid=9BD1241B6747427EAB2D1FC9F91ED8E7-51
+  when: '"5.26" not in falcon.stdout'
+
+- name: Start crowdstrike (falcon-sensor) service
+  service:
+    name: falcon-sensor
+    state: restarted
+    enabled: yes
+  when: '"5.26" not in falcon.stdout'
+
