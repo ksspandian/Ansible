@@ -1,0 +1,53 @@
+---
+- name: Playbook to install & configure Microsoft Defender ATP agent on Linux servers
+  hosts: pandiasadmin
+  gather_facts: true
+  become: yes
+  become_method: sudo
+
+  tasks:
+
+    - name: Install libsseccomp package
+      yum:
+        name:
+          - yum-utils
+          - libseccomp.x86_64
+          - unzip
+        state: present
+
+    - name: Add Microsoft repository
+      yum_repository:
+        name: packages-microsoft-com-prod
+        baseurl: https://packages.microsoft.com/rhel/7/prod/
+        gpgcheck: yes
+        gpgkey: http://packages.microsoft.com/keys/microsoft.asc
+
+    - name: Import GPG key
+      rpm_key:
+        key: http://packages.microsoft.com/keys/microsoft.asc
+        state: present
+
+    - name: Install mdatp (defender) package
+      yum:
+        name: mdatp
+        enablerepo: packages-microsoft-com-prod
+        state: present
+
+    - name: Copy onboarding package to servers
+      copy:
+        src: /root/ansible/files/Linux_WindowsDefenderATPOnboardingPackage.zip
+        dest: /var/tmp
+        owner: root
+        group: root
+        mode: '0775'
+
+    - name: Extract onboarding package
+      unarchive:
+        src: /var/tmp/Linux_WindowsDefenderATPOnboardingPackage.zip
+        dest: /var/tmp
+        remote_src: yes
+
+    - name: Configure Defender agent
+      shell: python /var/tmp/MicrosoftDefenderATPOnboardingLinuxServer.py
+
+

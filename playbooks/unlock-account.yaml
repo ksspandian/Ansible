@@ -1,0 +1,25 @@
+---
+- name: To change password for user and unlock the account
+  hosts: servers
+  gather_facts: false
+#  become: yes
+#  become_method: sudo
+
+  tasks:
+
+  - name: To unlock account
+    user:
+      name: shvali11
+      password_lock: no
+
+#  - name: To change password for user and unlock the account
+#    user:
+#      name: "{{ user2 }}"
+#      update_password: always
+#      password: "{{ pass2 }}"
+
+#  - name: To unlock account
+#    user:
+#      name: test123
+#      password_lock: no
+

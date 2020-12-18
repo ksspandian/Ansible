@@ -1,0 +1,40 @@
+---
+- hosts: localhost
+  gather_facts: true
+  become: yes
+  become_method: sudo
+  vars_prompt:
+
+    - name: username
+      prompt: What is your username?
+      private: no
+
+    - name: password
+      prompt: What is your password?
+      private: yes
+      encrypt: sha512_crypt
+      confirm: yes
+      salt_size: 7
+      
+#    - name: my_password2
+#      prompt: Enter password2
+#      private: yes
+#      encrypt: sha512_crypt
+#      confirm: yes
+#      salt_size: 7
+
+  tasks:
+
+    - name: To unlock account
+      user:
+        name: '{{ username }}'
+        password_lock: no
+
+    - name: To change password for user and unlock the account
+      user:
+        name: "{{ username }}"
+        update_password: always
+        password: "{{ password }}"
+
+
+

@@ -1,0 +1,63 @@
+---
+# tasks file for crowdstrike
+
+- name: To verify if crowdstrike (falcon-sensor) agent is installed and if it is version is 5.26
+  package_facts:
+    manager: rpm
+
+- name: Set fact falcon_ver based on crowdstrike agent version / falcon_ver will be undefined if crowdstrike is not installed
+  set_fact:
+    falcon_ver: "{{ ansible_facts.packages['falcon-sensor'][0].version }}"
+  when: '"falcon-sensor" in ansible_facts.packages'
+
+- name: To uninstall old version & install version 5.26
+  block:
+    - name: To uninstall old version of crowdstrike (falcon-sensor) agent if already installed
+      package:
+        name: falcon-sensor
+        state: absent
+
+    - name: Copy RHEL6 crowdstrike (falcon-sensor) agent to remote servers
+      copy:
+        src: falcon-sensor-5.26.0-9003.el6.x86_64.rpm
+        dest: /var/tmp/
+        owner: root
+        group: root
+        mode: '0755'
+      when:
+        - ansible_distribution_major_version == "6"
+
+    - name: Copy RHEL7 crowdstrike (falcon-sensor) agent to remote servers
+      copy:
+        src: falcon-sensor-5.26.0-9003.el7.x86_64.rpm
+        dest: /var/tmp/
+        owner: root
+        group: root
+        mode: '0755'
+      when:
+        - ansible_distribution_major_version == "7"
+
+    - name: Install crowdstrike (falcon-sensor) agent on RHEL6
+      shell: cd /var/tmp && yum install falcon-sensor-5.26.0-9003.el6.x86_64.rpm -y
+      when:
+        - ansible_distribution_major_iversion == "6"
+
+    - name: Install crowdstrike (falcon-sensor) agent on RHEL7
+      shell: cd /var/tmp && yum install falcon-sensor-5.26.0-9003.el7.x86_64.rpm -y
+      when:
+        - ansible_distribution_major_version == "7"
+
+    - name: Set falcon-sensor with CID
+      command: /opt/CrowdStrike/falconctl -s --cid=9BD1241B6747427EAB2D1FC9F91ED8E7-51
+
+    - name: Start crowdstrike (falcon-sensor) service
+      service:
+        name: falcon-sensor
+        state: restarted
+        enabled: yes
+
+  when:
+    - falcon_ver is undefined or
+      falcon_ver != "5.26.0"
+
+
