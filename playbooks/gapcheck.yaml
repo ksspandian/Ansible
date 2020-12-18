@@ -1,9 +1,8 @@
 ---
-- name: Playbook to execute gapcheck script and to fetch the output file 
+- name: Playbook to execute gapcheck script and to fetch the output file
   become: true
   become_method: sudo
   hosts: servers
-  remote_user: pandiasadmin
   gather_facts: false
 
   tasks:
@@ -24,16 +23,13 @@
       find:
         paths: /tmp
         patterns: '*isec*.csv'
+        age: "-1h"
       register: findfiles
 
     - name: Fetch files from remote server
       fetch:
         src: "{{ item }}"
-        dest: /home/kpandian/ansible/gapoutput/jul20/
+        dest: /home/kpandian/ansible/gapoutput/oct20/ashwanth/
         flat: yes
       with_items:
         - "{{ findfiles.files | map(attribute='path') | list }}"
-                                                  
-
-
-
