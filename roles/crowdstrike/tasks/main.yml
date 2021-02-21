@@ -48,7 +48,7 @@
         - ansible_distribution_major_version == "7"
 
     - name: Set falcon-sensor with CID
-      command: /opt/CrowdStrike/falconctl -s --cid=9BD1241B6747427EAB2D1FC9F91ED8E7-51
+      command: /opt/CrowdStrike/falconctl -s --cid=
 
     - name: Start crowdstrike (falcon-sensor) service
       service:
