@@ -10,7 +10,7 @@
     
     - name: Copy lssecfix file with owner and permissions
       copy:
-        src: /home/kpandian/Desktop/lssecfix.zip
+        src: /home/kpandian/ansible/files/lssecfix.zip
         dest: /tmp
         owner: root
         group: root
