@@ -1,0 +1,33 @@
+---
+- name: Playbook to patch the servers
+  hosts: servers
+  become: yes
+  become_method: sudo
+
+  tasks:
+    
+    - name: Upgrade all Packages
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+
+    - name: Running kernel before reboot
+      command: uname -r
+      register: kernelbeforereboot
+
+    - name: Reboot a server
+      reboot:
+        msg: Rebooting server after patching
+        pre_reboot_delay: 60
+        reboot_timeout: 600
+
+    - name: Running kernel after reboot
+      command: uname -r
+      register: kernelafterreboot
+
+    - name: Reconfiguring vmware tools
+      command: /usr/bin/vmware-config-tools.pl -d
+      when:
+        - ansible_distribution_major_version == "6"
+        - kernelbeforereboot.stdout != kernelafterreboot.stdout

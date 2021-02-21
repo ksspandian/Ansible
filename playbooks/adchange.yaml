@@ -1,0 +1,77 @@
+---
+- name: Playbook to modify AD servers in sssd & krb5 config files
+  hosts: servers
+  become: true
+  become_method: sudo
+  gather_facts: false
+
+  tasks:
+
+  - name: Find if old AD server addccam02f.amtrak.ad.nrpc is present in sssd config
+    shell: grep -i -e "^ad_server = addccam02f.amtrak.ad.nrpc" -e "^ad_server = addccam04f.amtrak.ad.nrpc" /etc/sssd/sssd.conf
+    ignore_errors: true
+    register: grep_sss_result
+
+  - name: Modify AD server in sssd config
+    lineinfile:
+      path: /etc/sssd/sssd.conf
+      regexp: '^ad_server = addccam02f.amtrak.ad.nrpc'
+      line: "ad_server = addccam04f.amtrak.ad.nrpc"
+      backup: yes
+    when: grep_sss_result.stdout != ""
+    register: modifyad
+    notify: restart sssd service
+
+  - name: Add backup AD server in sssd config
+    lineinfile:
+      path: /etc/sssd/sssd.conf
+      insertafter: "ad_server = addccam04f.amtrak.ad.nrpc"
+      line: "ad_backup_server = addccam05f.amtrak.ad.nrpc"
+      backup: yes
+    when: grep_sss_result.stdout != ""
+    notify: restart sssd service
+
+  - name: Find if old AD server addccam02f.amtrak.ad.nrpc or addccam01f.amtrak.ad.nrpc is present in krb5 config
+    shell: grep -i -e "^ kdc = addccam02f.amtrak.ad.nrpc" -e "^ kdc = addccam01f.amtrak.ad.nrpc" /etc/krb5.conf
+    ignore_errors: true
+    register: grep_krb5_result
+
+  - name: Remove AD server in krb5 config if old AD servers are present
+    lineinfile:
+      path: /etc/krb5.conf
+      regexp: '^ kdc'
+      state: absent
+      backup: yes
+    when: grep_krb5_result != ""
+
+  - name: Remove AD server in krb5 config if old AD servers are present
+    lineinfile:
+      path: /etc/krb5.conf
+      regexp: '^ admin_server'
+      state: absent
+      backup: yes
+    when: grep_krb5_result != ""
+
+  - name: Add New AD servers in krb5 config
+    lineinfile:
+      path: /etc/krb5.conf
+      insertafter: " AMTRAK.AD.NRPC = {"
+      line: "{{ item }}"
+      backup: yes
+    when: grep_krb5_result != ""
+    with_items:
+    - " admin_server = addccam05f.amtrak.ad.nrpc"
+    - " admin_server = addccam04f.amtrak.ad.nrpc"
+    - " kdc = addccam05f.amtrak.ad.nrpc"
+    - " kdc = addccam04f.amtrak.ad.nrpc"
+
+  handlers:
+  - name: restart sssd service
+    service:
+      name: sssd
+      state: restarted
+
+
+
+
+
